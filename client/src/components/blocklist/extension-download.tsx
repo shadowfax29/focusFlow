@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -8,12 +8,19 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Download, Chrome, Shield } from 'lucide-react';
+import { Download, Chrome, Shield, Check, ExternalLink } from 'lucide-react';
 
 export default function ExtensionDownload() {
-  // This would be the URL to your Chrome extension in the Chrome Web Store
-  // For now, using a placeholder URL
-  const extensionUrl = "https://chrome.google.com/webstore/category/extensions";
+  const [downloadStarted, setDownloadStarted] = useState(false);
+  // Local extension file path
+  const extensionFilePath = "/focusflow-extension.zip";
+  
+  const handleDownload = () => {
+    // Start the download
+    window.location.href = extensionFilePath;
+    // Set the download started state to true
+    setDownloadStarted(true);
+  };
   
   return (
     <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-100">
@@ -42,15 +49,45 @@ export default function ExtensionDownload() {
           </div>
         </div>
       </CardContent>
-      <CardFooter>
+      <CardFooter className="flex flex-col gap-2">
         <Button 
           variant="default" 
           className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-          onClick={() => window.open(extensionUrl, '_blank')}
+          onClick={handleDownload}
         >
-          <Download className="mr-2 h-4 w-4" />
-          Download Extension
+          {downloadStarted ? (
+            <>
+              <Check className="mr-2 h-4 w-4" />
+              Downloaded Extension
+            </>
+          ) : (
+            <>
+              <Download className="mr-2 h-4 w-4" />
+              Download Extension
+            </>
+          )}
         </Button>
+        
+        {downloadStarted && (
+          <div className="text-xs text-muted-foreground mt-2 space-y-2">
+            <p className="font-medium">Installation instructions:</p>
+            <ol className="list-decimal pl-5 space-y-1">
+              <li>Unzip the downloaded file</li>
+              <li>Open Chrome and go to <code>chrome://extensions</code></li>
+              <li>Enable "Developer mode" in the top-right corner</li>
+              <li>Click "Load unpacked" and select the unzipped folder</li>
+              <li>The extension is now installed!</li>
+            </ol>
+            <Button 
+              variant="link" 
+              className="text-blue-600 hover:text-blue-800 p-0 h-auto text-xs"
+              onClick={() => window.open('https://developer.chrome.com/docs/extensions/mv3/getstarted/development-basics/#load-unpacked', '_blank')}
+            >
+              <ExternalLink className="h-3 w-3 mr-1" />
+              View Chrome's official instructions
+            </Button>
+          </div>
+        )}
       </CardFooter>
     </Card>
   );
