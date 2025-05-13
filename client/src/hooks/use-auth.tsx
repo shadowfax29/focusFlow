@@ -33,17 +33,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
+      console.log("Attempting login with credentials:", credentials);
       const res = await apiRequest("POST", "/api/login", credentials);
-      return await res.json();
+      const userData = await res.json();
+      console.log("Login response:", userData);
+      return userData;
     },
     onSuccess: (user: SelectUser) => {
+      console.log("Login successful, updating user data:", user);
       queryClient.setQueryData(["/api/user"], user);
+      // Force refetch user data to ensure it's properly updated
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       toast({
         title: "Login successful",
         description: `Welcome back, ${user.username}!`,
       });
     },
     onError: (error: Error) => {
+      console.error("Login error:", error);
       toast({
         title: "Login failed",
         description: error.message,
@@ -54,17 +61,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const registerMutation = useMutation({
     mutationFn: async (credentials: InsertUser) => {
+      console.log("Attempting registration with:", credentials);
       const res = await apiRequest("POST", "/api/register", credentials);
-      return await res.json();
+      const userData = await res.json();
+      console.log("Registration response:", userData);
+      return userData;
     },
     onSuccess: (user: SelectUser) => {
+      console.log("Registration successful, updating user data:", user);
       queryClient.setQueryData(["/api/user"], user);
+      // Force refetch user data to ensure it's properly updated
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       toast({
         title: "Registration successful",
         description: "Your account has been created",
       });
     },
     onError: (error: Error) => {
+      console.error("Registration error:", error);
       toast({
         title: "Registration failed",
         description: error.message,

@@ -113,19 +113,36 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/login", (req, res, next) => {
+    console.log("Login attempt with:", req.body);
+    
     passport.authenticate("local", (err, user) => {
       if (err) {
+        console.error("Login error:", err);
         return next(err);
       }
       if (!user) {
+        console.log("Login failed: Invalid credentials");
         return res.status(401).json({ message: "Invalid username or password" });
       }
+      
+      console.log("User authenticated, establishing session");
       req.login(user, (err) => {
         if (err) {
+          console.error("Session creation error:", err);
           return next(err);
         }
-        const { password, ...userWithoutPassword } = user;
-        return res.status(200).json(userWithoutPassword);
+        
+        // Ensure session is saved before responding
+        req.session.save((err) => {
+          if (err) {
+            console.error("Session save error:", err);
+            return next(err);
+          }
+          
+          const { password, ...userWithoutPassword } = user;
+          console.log("Login successful, returning user:", userWithoutPassword);
+          return res.status(200).json(userWithoutPassword);
+        });
       });
     })(req, res, next);
   });
@@ -138,8 +155,17 @@ export function setupAuth(app: Express) {
   });
 
   app.get("/api/user", (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
+    console.log("Checking user authentication status, isAuthenticated:", req.isAuthenticated());
+    console.log("Session ID:", req.sessionID);
+    console.log("Session data:", req.session);
+    
+    if (!req.isAuthenticated()) {
+      console.log("User not authenticated, returning 401");
+      return res.sendStatus(401);
+    }
+    
     const { password, ...userWithoutPassword } = req.user;
+    console.log("User is authenticated, returning user data:", userWithoutPassword);
     res.json(userWithoutPassword);
   });
 }
