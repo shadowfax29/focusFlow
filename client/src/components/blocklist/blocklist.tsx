@@ -68,16 +68,14 @@ export default function Blocklist() {
                 checked={site.isEnabled} 
                 onCheckedChange={() => handleToggleSite(site.id, site.isEnabled)} 
               />
-              <AlertDialogTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  className="text-muted-foreground hover:text-destructive"
-                  onClick={() => setSiteToDelete({ id: site.id, domain: site.domain })}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </AlertDialogTrigger>
+              <Button 
+                variant="ghost" 
+                size="icon"
+                className="text-muted-foreground hover:text-destructive"
+                onClick={() => setSiteToDelete({ id: site.id, domain: site.domain })}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
             </div>
           </div>
         ))

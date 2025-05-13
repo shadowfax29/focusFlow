@@ -175,8 +175,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid data", errors: [{ code: "missing_field", path: ["pomodorosPlanned"], message: "Required" }] });
       }
       
+      // Convert date string to Date object if needed
+      let sessionData = { ...req.body };
+      if (typeof sessionData.startTime === 'string') {
+        sessionData.startTime = new Date(sessionData.startTime);
+      }
+      
       const validatedData = insertSessionSchema.parse({
-        ...req.body,
+        ...sessionData,
         userId: req.user.id
       });
       

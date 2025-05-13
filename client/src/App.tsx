@@ -11,6 +11,7 @@ import SettingsPage from "@/pages/settings-page";
 import AuthPage from "@/pages/auth-page";
 import { ProtectedRoute } from "./lib/protected-route";
 import ActiveSessionIndicator from "@/components/ui/active-session-indicator";
+import WebsiteBlocker from "@/components/blocklist/website-blocker";
 
 function Router() {
   return (
@@ -33,6 +34,7 @@ function App() {
       <Toaster />
       <Router />
       <ActiveSessionIndicator />
+      <WebsiteBlocker />
     </TooltipProvider>
   );
 }
