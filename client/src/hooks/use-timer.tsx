@@ -94,13 +94,16 @@ export function TimerProvider({ children }: { children: ReactNode }) {
   // Create session mutation
   const createSessionMutation = useMutation({
     mutationFn: async (sessionData: { startTime: Date, plannedDuration: number, pomodorosPlanned: number, task?: string }) => {
+      console.log("Creating session with data:", sessionData);
       const res = await apiRequest("POST", "/api/sessions", sessionData);
       return await res.json();
     },
     onSuccess: (session: Session) => {
+      console.log("Session created successfully:", session);
       setCurrentSession(session);
     },
     onError: (error: Error) => {
+      console.error("Failed to create session:", error);
       toast({
         title: "Failed to create session",
         description: error.message,
@@ -263,10 +266,13 @@ export function TimerProvider({ children }: { children: ReactNode }) {
         const focusDuration = timerSettings ? timerSettings.focusMinutes * 60 : 25 * 60;
         const pomodorosPlanned = timerSettings ? timerSettings.pomodorosUntilLongBreak : 4;
         
+        // Make sure we're sending integers, not floating point numbers
+        const plannedDurationSeconds = Math.round(focusDuration * pomodorosPlanned);
+        
         createSessionMutation.mutate({
           startTime: new Date(),
-          plannedDuration: focusDuration * pomodorosPlanned,
-          pomodorosPlanned,
+          plannedDuration: plannedDurationSeconds,
+          pomodorosPlanned: Math.round(pomodorosPlanned),
           task: task || undefined
         });
         

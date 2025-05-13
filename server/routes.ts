@@ -162,16 +162,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/sessions", requireAuth, async (req, res) => {
     try {
+      console.log("Received session creation request:", req.body);
+      
+      // Check if required fields are present
+      if (!req.body.plannedDuration) {
+        console.error("Missing plannedDuration");
+        return res.status(400).json({ message: "Invalid data", errors: [{ code: "missing_field", path: ["plannedDuration"], message: "Required" }] });
+      }
+      
+      if (!req.body.pomodorosPlanned) {
+        console.error("Missing pomodorosPlanned");
+        return res.status(400).json({ message: "Invalid data", errors: [{ code: "missing_field", path: ["pomodorosPlanned"], message: "Required" }] });
+      }
+      
       const validatedData = insertSessionSchema.parse({
         ...req.body,
         userId: req.user.id
       });
+      
+      console.log("Validated session data:", validatedData);
       const session = await storage.createSession(validatedData);
+      console.log("Session created:", session);
       res.status(201).json(session);
     } catch (err) {
       if (err instanceof z.ZodError) {
+        console.error("Validation error:", err.errors);
         return res.status(400).json({ message: "Invalid data", errors: err.errors });
       }
+      console.error("Session creation error:", err);
       res.status(500).json({ message: "Failed to create session" });
     }
   });
