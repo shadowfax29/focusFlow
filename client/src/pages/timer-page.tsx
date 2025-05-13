@@ -7,6 +7,7 @@ import TimerControls from "@/components/timer/timer-controls";
 import SessionInfo from "@/components/timer/session-info";
 import AbortModal from "@/components/timer/abort-modal";
 import CompleteModal from "@/components/timer/complete-modal";
+import WebsiteBlocker from "@/components/blocklist/website-blocker";
 import { useTimer } from "@/hooks/use-timer";
 import { TimerProvider } from "@/hooks/use-timer";
 import { 
@@ -89,6 +90,9 @@ function TimerPageContent() {
         <title>Focus Timer | FocusFlow</title>
         <meta name="description" content="Stay focused with FocusFlow's Pomodoro timer. Customize work and break intervals, track your sessions, and block distractions." />
       </Helmet>
+      
+      {/* Website blocker component to block distracting sites during focus time */}
+      {isRunning && timerMode === 'focus' && <WebsiteBlocker />}
       
       <div className="min-h-screen flex flex-col bg-background">
         <Header />

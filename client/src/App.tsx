@@ -34,7 +34,6 @@ function App() {
       <Toaster />
       <Router />
       <ActiveSessionIndicator />
-      <WebsiteBlocker />
     </TooltipProvider>
   );
 }
