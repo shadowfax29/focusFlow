@@ -3,6 +3,7 @@ import Sidebar from "@/components/layout/sidebar";
 import MobileNav from "@/components/layout/mobile-nav";
 import Blocklist from "@/components/blocklist/blocklist";
 import AddSiteDialog from "@/components/blocklist/add-site-dialog";
+import ExtensionDownload from "@/components/blocklist/extension-download";
 import { BlocklistProvider } from "@/hooks/use-blocklist";
 import { 
   Card, 
@@ -30,7 +31,7 @@ function BlocklistPageContent() {
           <Sidebar />
           
           <main className="flex-1 overflow-y-auto pb-16 md:pb-0">
-            <div className="container mx-auto p-6 max-w-3xl">
+            <div className="container mx-auto p-6 max-w-3xl space-y-6">
               <Card className="bg-card shadow-sm">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <div>
@@ -49,6 +50,9 @@ function BlocklistPageContent() {
                   <span>Sites are only blocked during focus time</span>
                 </CardFooter>
               </Card>
+
+              {/* Chrome Extension Download Card */}
+              <ExtensionDownload />
             </div>
           </main>
         </div>
