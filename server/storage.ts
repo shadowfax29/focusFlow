@@ -1,8 +1,8 @@
 import { users, timerSettings, blockedSites, notificationSettings, sessions } from "@shared/schema";
-import type { 
-  User, InsertUser, 
-  TimerSettings, InsertTimerSettings, 
-  BlockedSite, InsertBlockedSite, 
+import type {
+  User, InsertUser,
+  TimerSettings, InsertTimerSettings,
+  BlockedSite, InsertBlockedSite,
   NotificationSettings, InsertNotificationSettings,
   Session, InsertSession, UpdateSession
 } from "@shared/schema";
@@ -17,6 +17,7 @@ export interface IStorage {
   // User methods
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByExtensionToken(token: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
 
   // Timer settings methods
@@ -69,6 +70,39 @@ export class DatabaseStorage implements IStorage {
   async getUserByUsername(username: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.username, username));
     return user;
+  }
+
+  async getUserByExtensionToken(token: string): Promise<User | undefined> {
+    try {
+      console.log("Looking for user with extension token:", token.substring(0, 10) + "...");
+
+      // For demo purposes, we'll use a very simple approach
+      // In a production app, you would validate the token properly
+
+      // Extract username from token (assuming token format is "username:randomstring")
+      const parts = token.split(':');
+      if (parts.length !== 2) {
+        console.log("Invalid token format");
+        return undefined;
+      }
+
+      const username = parts[0];
+      console.log("Extracted username from token:", username);
+
+      // Find user by username
+      const user = await this.getUserByUsername(username);
+
+      if (user) {
+        console.log("Found user:", user.id, user.username);
+        return user;
+      }
+
+      console.log("No user found with username:", username);
+      return undefined;
+    } catch (error) {
+      console.error("Error in getUserByExtensionToken:", error);
+      return undefined;
+    }
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
@@ -171,11 +205,11 @@ export class DatabaseStorage implements IStorage {
       .from(sessions)
       .where(eq(sessions.userId, userId))
       .orderBy(desc(sessions.startTime));
-    
+
     if (limit) {
       query = query.limit(limit);
     }
-    
+
     return await query;
   }
 
@@ -211,34 +245,34 @@ export class DatabaseStorage implements IStorage {
     completionRate: number;
   }> {
     const allSessions = await this.getSessions(userId);
-    
+
     const now = new Date();
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const oneWeekAgo = new Date(now);
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-    
+
     const todaySessions = allSessions.filter(
       session => new Date(session.startTime).getTime() >= startOfToday.getTime()
     );
-    
+
     const weekSessions = allSessions.filter(
       session => new Date(session.startTime).getTime() >= oneWeekAgo.getTime()
     );
-    
+
     const completedSessions = allSessions.filter(session => session.isCompleted);
-    const completionRate = allSessions.length > 0 
-      ? Math.round((completedSessions.length / allSessions.length) * 100) 
+    const completionRate = allSessions.length > 0
+      ? Math.round((completedSessions.length / allSessions.length) * 100)
       : 0;
-    
+
     // Calculate total focus time in hours from actual durations
     let totalFocusTimeSeconds = 0;
     weekSessions.forEach(session => {
       totalFocusTimeSeconds += session.actualDuration || 0;
     });
-    
+
     // Convert to hours with one decimal point
     const focusTimeHours = Math.round((totalFocusTimeSeconds / 3600) * 10) / 10;
-    
+
     return {
       today: todaySessions.length,
       week: weekSessions.length,

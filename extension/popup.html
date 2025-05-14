@@ -4,7 +4,7 @@
   <title>FocusFlow Distraction Blocker</title>
   <style>
     body {
-      width: 300px;
+      width: 350px;
       padding: 15px;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     }
@@ -46,13 +46,18 @@
       cursor: pointer;
       width: 100%;
       font-weight: 500;
+      margin-bottom: 10px;
     }
     button:hover {
       background-color: #2563EB;
     }
+    button:disabled {
+      background-color: #93C5FD;
+      cursor: not-allowed;
+    }
     .site-list {
       margin-top: 15px;
-      max-height: 200px;
+      max-height: 150px;
       overflow-y: auto;
     }
     .site-item {
@@ -65,6 +70,137 @@
       color: #6B7280;
       text-align: center;
     }
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid #E5E7EB;
+      margin-bottom: 15px;
+    }
+    .tab-button {
+      padding: 8px 16px;
+      background: none;
+      border: none;
+      color: #6B7280;
+      font-weight: 500;
+      cursor: pointer;
+      margin-bottom: 0;
+      width: auto;
+    }
+    .tab-button.active {
+      color: #3B82F6;
+      border-bottom: 2px solid #3B82F6;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .form-group {
+      margin-bottom: 12px;
+    }
+    label {
+      display: block;
+      margin-bottom: 4px;
+      font-weight: 500;
+    }
+    input {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #D1D5DB;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    .error-message {
+      color: #DC2626;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+    .connection-status {
+      background-color: #F3F4F6;
+      padding: 10px;
+      border-radius: 6px;
+      margin-bottom: 10px;
+      font-size: 14px;
+    }
+    .connection-status.connected {
+      background-color: #DCFCE7;
+      color: #166534;
+    }
+    .timer-display {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .timer-circle {
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      background-color: #F3F4F6;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 15px;
+      border: 4px solid #3B82F6;
+    }
+    .timer-time {
+      font-size: 28px;
+      font-weight: bold;
+      color: #1F2937;
+    }
+    .timer-mode {
+      font-size: 14px;
+      color: #6B7280;
+      margin-top: 5px;
+    }
+    .timer-controls {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    .timer-button {
+      padding: 8px 16px;
+      background-color: #3B82F6;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    .timer-button:hover {
+      background-color: #2563EB;
+    }
+    .timer-progress {
+      width: 100%;
+      margin-bottom: 15px;
+    }
+    .pomodoro-count {
+      font-size: 14px;
+      color: #6B7280;
+      margin-bottom: 5px;
+      text-align: center;
+    }
+    .progress-bar {
+      height: 8px;
+      background-color: #E5E7EB;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background-color: #3B82F6;
+      transition: width 0.3s ease;
+    }
+    .timer-circle.focus {
+      border-color: #3B82F6;
+    }
+    .timer-circle.shortBreak {
+      border-color: #10B981;
+    }
+    .timer-circle.longBreak {
+      border-color: #8B5CF6;
+    }
   </style>
 </head>
 <body>
@@ -72,25 +208,75 @@
     <img src="icons/icon48.png" alt="FocusFlow Logo" class="logo">
     <h1>FocusFlow Blocker</h1>
   </div>
-  
-  <div id="status" class="status inactive">
-    Blocker is currently inactive
+
+  <div class="tabs">
+    <button class="tab-button active" data-tab="blocking">Blocking</button>
+    <button class="tab-button" data-tab="account">Account</button>
   </div>
-  
-  <button id="toggleButton">Start Blocking</button>
-  
-  <div class="site-list">
-    <h3>Blocked Sites</h3>
-    <div id="siteList">
-      <div class="site-item">facebook.com</div>
-      <div class="site-item">twitter.com</div>
-      <div class="site-item">instagram.com</div>
-      <div class="site-item">youtube.com</div>
+
+  <div id="blocking-tab" class="tab-content active">
+    <div id="timer-display" class="timer-display">
+      <div class="timer-circle">
+        <div class="timer-time">25:00</div>
+        <div class="timer-mode">Focus Time</div>
+      </div>
+      <div class="timer-controls">
+        <button id="startTimerButton" class="timer-button">Start Timer</button>
+        <button id="resetTimerButton" class="timer-button">Reset</button>
+      </div>
+      <div class="timer-progress">
+        <div class="pomodoro-count">Pomodoro 1/4</div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: 0%"></div>
+        </div>
+      </div>
     </div>
+
+    <div id="status" class="status inactive">
+      Blocker is currently inactive
+    </div>
+
+    <button id="toggleButton">Start Blocking</button>
+
+    <div class="site-list">
+      <h3>Blocked Sites</h3>
+      <div id="siteListContainer">
+        <div class="site-item">facebook.com</div>
+        <div class="site-item">twitter.com</div>
+        <div class="site-item">instagram.com</div>
+        <div class="site-item">youtube.com</div>
+        <div class="site-item">reddit.com</div>
+      </div>
+    </div>
+
+    <button id="syncButton" disabled>Sync Blocked Sites</button>
   </div>
-  
-  <div class="footer">
-    Connect to FocusFlow to sync your blocklist
+
+  <div id="account-tab" class="tab-content">
+    <div id="connection-status" class="connection-status">
+      Not connected to FocusFlow
+    </div>
+
+    <div id="login-form">
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input type="text" id="username" placeholder="Enter your username">
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="Enter your password">
+      </div>
+
+      <div id="login-error" class="error-message"></div>
+
+      <button id="connectButton">Connect Account</button>
+    </div>
+
+    <div id="connected-account" style="display: none;">
+      <p>Your account is connected to FocusFlow. Your blocklist will be synced automatically.</p>
+      <button id="disconnectButton">Disconnect Account</button>
+    </div>
   </div>
 
   <script src="popup.js"></script>

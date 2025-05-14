@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { insertBlockedSiteSchema, insertSessionSchema, updateSessionSchema } from "@shared/schema";
 import { z } from "zod";
+import { randomBytes } from "crypto";
 
 // Middleware to check if user is authenticated
 const requireAuth = (req: Request, res: Response, next: Function) => {
@@ -78,11 +79,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       const { isEnabled } = req.body;
-      
+
       if (typeof isEnabled !== 'boolean') {
         return res.status(400).json({ message: "isEnabled must be a boolean" });
       }
-      
+
       const site = await storage.updateBlockedSite(parseInt(id), req.user.id, isEnabled);
       if (!site) {
         return res.status(404).json({ message: "Blocked site not found" });
@@ -163,29 +164,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/sessions", requireAuth, async (req, res) => {
     try {
       console.log("Received session creation request:", req.body);
-      
+
       // Check if required fields are present
       if (!req.body.plannedDuration) {
         console.error("Missing plannedDuration");
         return res.status(400).json({ message: "Invalid data", errors: [{ code: "missing_field", path: ["plannedDuration"], message: "Required" }] });
       }
-      
+
       if (!req.body.pomodorosPlanned) {
         console.error("Missing pomodorosPlanned");
         return res.status(400).json({ message: "Invalid data", errors: [{ code: "missing_field", path: ["pomodorosPlanned"], message: "Required" }] });
       }
-      
+
       // Convert date string to Date object if needed
       let sessionData = { ...req.body };
       if (typeof sessionData.startTime === 'string') {
         sessionData.startTime = new Date(sessionData.startTime);
       }
-      
+
       const validatedData = insertSessionSchema.parse({
         ...sessionData,
         userId: req.user.id
       });
-      
+
       console.log("Validated session data:", validatedData);
       const session = await storage.createSession(validatedData);
       console.log("Session created:", session);
@@ -223,6 +224,96 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(stats);
     } catch (err) {
       res.status(500).json({ message: "Failed to fetch session stats" });
+    }
+  });
+
+  // Extension API endpoints
+  // Generate a token for the extension
+  app.post("/api/extension/token", requireAuth, async (req, res) => {
+    try {
+      console.log("Generating extension token for user:", req.user.id, req.user.username);
+
+      // Generate a simple token that includes the username
+      // In a production app, you would use a more secure method
+      const randomPart = randomBytes(16).toString('hex');
+      const token = `${req.user.username}:${randomPart}`;
+
+      console.log("Generated token:", token);
+
+      // Return the token to the client
+      res.json({ token });
+      console.log("Token sent to client");
+    } catch (err) {
+      console.error("Error generating extension token:", err);
+      res.status(500).json({ message: "Failed to generate token" });
+    }
+  });
+
+  // Middleware to verify extension token
+  const verifyExtensionToken = async (req: Request, res: Response, next: Function) => {
+    try {
+      console.log("Verifying extension token");
+      console.log("Headers:", req.headers);
+
+      const authHeader = req.headers.authorization;
+
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        console.log("No valid authorization header found");
+        return res.status(401).json({ message: "Unauthorized: No token provided" });
+      }
+
+      const token = authHeader.split(' ')[1];
+      console.log("Token from header:", token.substring(0, 10) + "...");
+
+      // Find the user with this token
+      console.log("Looking up user by extension token");
+      const user = await storage.getUserByExtensionToken(token);
+
+      if (!user) {
+        console.log("No user found for token");
+        return res.status(401).json({ message: "Unauthorized: Invalid token" });
+      }
+
+      console.log("User found:", user.id, user.username);
+
+      // Attach the user to the request
+      req.user = user;
+      next();
+    } catch (err) {
+      console.error("Error verifying extension token:", err);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  };
+
+  // Get blocked sites for the extension
+  app.get("/api/extension/blocked-sites", verifyExtensionToken, async (req, res) => {
+    try {
+      const sites = await storage.getBlockedSites(req.user.id);
+      res.json(sites);
+    } catch (err) {
+      console.error("Error fetching blocked sites for extension:", err);
+      res.status(500).json({ message: "Failed to fetch blocked sites" });
+    }
+  });
+
+  // Get current timer status for the extension
+  app.get("/api/extension/timer-status", verifyExtensionToken, async (req, res) => {
+    try {
+      // Get the user's active session if any
+      const sessions = await storage.getSessions(req.user.id, 1);
+      const activeSession = sessions.length > 0 && !sessions[0].endTime ? sessions[0] : null;
+
+      // Get the user's timer settings
+      const timerSettings = await storage.getTimerSettings(req.user.id);
+
+      res.json({
+        activeSession,
+        timerSettings,
+        serverTime: new Date()
+      });
+    } catch (err) {
+      console.error("Error fetching timer status for extension:", err);
+      res.status(500).json({ message: "Failed to fetch timer status" });
     }
   });
 
