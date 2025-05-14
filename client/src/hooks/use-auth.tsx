@@ -7,6 +7,7 @@ import {
 import { insertUserSchema, User as SelectUser, InsertUser } from "@shared/schema";
 import { getQueryFn, apiRequest, queryClient } from "../lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 
 type AuthContextType = {
   user: SelectUser | null;
@@ -22,6 +23,7 @@ type LoginData = Pick<InsertUser, "username" | "password">;
 export const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const {
     data: user,
     error,
@@ -41,13 +43,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: (user: SelectUser) => {
       console.log("Login successful, updating user data:", user);
+      // Set the user data immediately
       queryClient.setQueryData(["/api/user"], user);
-      // Force refetch user data to ensure it's properly updated
-      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+
+      // Show success toast
       toast({
         title: "Login successful",
         description: `Welcome back, ${user.username}!`,
       });
+
+      // Redirect to dashboard immediately after successful login
+      setLocation("/");
+
+      // Force refetch user data in the background to ensure it's properly updated
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      }, 100);
     },
     onError: (error: Error) => {
       console.error("Login error:", error);
@@ -69,13 +80,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: (user: SelectUser) => {
       console.log("Registration successful, updating user data:", user);
+      // Set the user data immediately
       queryClient.setQueryData(["/api/user"], user);
-      // Force refetch user data to ensure it's properly updated
-      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+
+      // Show success toast
       toast({
         title: "Registration successful",
         description: "Your account has been created",
       });
+
+      // Redirect to dashboard immediately after successful registration
+      setLocation("/");
+
+      // Force refetch user data in the background to ensure it's properly updated
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      }, 100);
     },
     onError: (error: Error) => {
       console.error("Registration error:", error);
@@ -92,13 +112,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await apiRequest("POST", "/api/logout");
     },
     onSuccess: () => {
+      console.log("Logout successful, clearing user data");
+      // Clear user data immediately
       queryClient.setQueryData(["/api/user"], null);
+
+      // Show success toast
       toast({
         title: "Logged out",
         description: "You have been logged out",
       });
+
+      // Redirect to auth page immediately after successful logout
+      console.log("Redirecting to auth page after logout");
+      setLocation("/auth");
+
+      // Force refetch user data in the background to ensure it's properly updated
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      }, 100);
     },
     onError: (error: Error) => {
+      console.error("Logout error:", error);
       toast({
         title: "Logout failed",
         description: error.message,

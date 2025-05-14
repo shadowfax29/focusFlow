@@ -7,18 +7,30 @@ import cors from 'cors';
 
 const app = express();
 
-// Enable CORS for all routes
+// Enable CORS for all routes with specific configuration for Chrome extension
 app.use(cors({
-  origin: true, // Allow all origins
-  credentials: true
+  origin: function(origin, callback) {
+    // Allow requests with no origin (like mobile apps, curl, or Chrome extension)
+    if (!origin) return callback(null, true);
+
+    // Allow all origins for this demo app
+    return callback(null, true);
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization']
 }));
+
+// Handle preflight OPTIONS requests
+app.options('*', cors());
 
 // Add custom headers for Chrome extension
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-  res.header('Access-Control-Allow-Credentials', 'true');
+  // Ensure content type is set for all API responses
+  if (req.path.startsWith('/api')) {
+    res.setHeader('Content-Type', 'application/json');
+  }
+
   next();
 });
 

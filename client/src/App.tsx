@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, Redirect, useLocation } from "wouter";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
@@ -12,6 +12,22 @@ import AuthPage from "@/pages/auth-page";
 import { ProtectedRoute } from "./lib/protected-route";
 import ActiveSessionIndicator from "@/components/ui/active-session-indicator";
 import WebsiteBlocker from "@/components/blocklist/website-blocker";
+import { useAuth } from "@/hooks/use-auth";
+
+// Auth route that redirects to dashboard if user is already logged in
+function AuthRoute() {
+  const { user, isLoading } = useAuth();
+  const [, setLocation] = useLocation();
+
+  // If user is already logged in, redirect to dashboard
+  if (user && !isLoading) {
+    console.log("User already logged in, redirecting from auth page to dashboard");
+    return <Redirect to="/" />;
+  }
+
+  // Otherwise, show the auth page
+  return <AuthPage />;
+}
 
 function Router() {
   return (
@@ -22,7 +38,7 @@ function Router() {
       <ProtectedRoute path="/analytics" component={AnalyticsPage} />
       <ProtectedRoute path="/history" component={HistoryPage} />
       <ProtectedRoute path="/settings" component={SettingsPage} />
-      <Route path="/auth" component={AuthPage} />
+      <Route path="/auth" component={AuthRoute} />
       <Route component={NotFound} />
     </Switch>
   );

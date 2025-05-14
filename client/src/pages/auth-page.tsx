@@ -75,13 +75,8 @@ export default function AuthPage() {
     registerMutation.mutate(registerData);
   };
 
-  // Redirect if already logged in
-  if (user) {
-    console.log("User authenticated, redirecting to dashboard", user);
-    return <Redirect to="/" />;
-  } else {
-    console.log("User not authenticated yet");
-  }
+  // Redirection is now handled at the router level in App.tsx
+  console.log("Rendering auth page, authentication status:", user ? "authenticated" : "not authenticated");
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-background">
@@ -104,7 +99,7 @@ export default function AuthPage() {
                 <TabsTrigger value="login">Login</TabsTrigger>
                 <TabsTrigger value="register">Register</TabsTrigger>
               </TabsList>
-              
+
               <TabsContent value="login">
                 <Form {...loginForm}>
                   <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
@@ -134,9 +129,9 @@ export default function AuthPage() {
                         </FormItem>
                       )}
                     />
-                    <Button 
-                      type="submit" 
-                      className="w-full" 
+                    <Button
+                      type="submit"
+                      className="w-full"
                       disabled={loginMutation.isPending}
                     >
                       {loginMutation.isPending ? "Logging in..." : "Login"}
@@ -144,7 +139,7 @@ export default function AuthPage() {
                   </form>
                 </Form>
               </TabsContent>
-              
+
               <TabsContent value="register">
                 <Form {...registerForm}>
                   <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
@@ -187,9 +182,9 @@ export default function AuthPage() {
                         </FormItem>
                       )}
                     />
-                    <Button 
-                      type="submit" 
-                      className="w-full" 
+                    <Button
+                      type="submit"
+                      className="w-full"
                       disabled={registerMutation.isPending}
                     >
                       {registerMutation.isPending ? "Creating account..." : "Register"}
@@ -210,7 +205,7 @@ export default function AuthPage() {
           </CardFooter>
         </Card>
       </div>
-      
+
       {/* Right side - Hero section */}
       <div className="w-full md:w-1/2 bg-primary text-primary-foreground p-8 flex items-center justify-center">
         <div className="max-w-md space-y-6">
@@ -218,7 +213,7 @@ export default function AuthPage() {
           <p className="text-xl">
             FocusFlow helps you stay focused with Pomodoro timers and website blocking.
           </p>
-          
+
           <div className="space-y-4 mt-8">
             <div className="flex items-start gap-4">
               <div className="bg-primary-foreground p-2 rounded-full text-primary">
@@ -231,7 +226,7 @@ export default function AuthPage() {
                 </p>
               </div>
             </div>
-            
+
             <div className="flex items-start gap-4">
               <div className="bg-primary-foreground p-2 rounded-full text-primary">
                 <ShieldAlert className="h-6 w-6" />
@@ -243,7 +238,7 @@ export default function AuthPage() {
                 </p>
               </div>
             </div>
-            
+
             <div className="flex items-start gap-4">
               <div className="bg-primary-foreground p-2 rounded-full text-primary">
                 <BarChartBig className="h-6 w-6" />
@@ -255,7 +250,7 @@ export default function AuthPage() {
                 </p>
               </div>
             </div>
-            
+
             <div className="flex items-start gap-4">
               <div className="bg-primary-foreground p-2 rounded-full text-primary">
                 <CheckCircle className="h-6 w-6" />

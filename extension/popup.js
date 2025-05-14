@@ -149,6 +149,25 @@ document.addEventListener('DOMContentLoaded', function() {
         timerState.isRunning = true;
         startTimerButton.textContent = 'Pause Timer';
 
+        // Show notification when starting a focus session
+        if (timerState.timerMode === 'focus') {
+          chrome.runtime.sendMessage({
+            action: 'showNotification',
+            title: 'Focus Time Started',
+            message: 'Stay focused and productive!',
+            type: 'sessionStart'
+          });
+        }
+        // Show notification when starting a break
+        else if (timerState.timerMode === 'shortBreak' || timerState.timerMode === 'longBreak') {
+          chrome.runtime.sendMessage({
+            action: 'showNotification',
+            title: 'Break Time Started',
+            message: 'Take a moment to relax.',
+            type: 'breakTime'
+          });
+        }
+
         // Update timer state in storage
         chrome.storage.local.set({ timerState });
       } else {
